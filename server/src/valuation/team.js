@@ -58,19 +58,28 @@ export function evaluateTeam(team, ctx) {
   const totalValue = playerValue + pickValue;
 
   // Breakdown by position, plus picks as their own bucket.
+  //
+  // Surplus is measured against the ACTUAL optimal lineup rather than against a
+  // per-position slot count. Counting slots over-states capacity in superflex:
+  // summing "TE can fill TE + FLEX + SUPER_FLEX" for every position at once
+  // implies far more starting spots than the lineup really has. Asking the
+  // solver who actually starts resolves flex contention correctly.
+  const startingIds = new Set(lineup.starters.map((p) => String(p.id)));
   const byPosition = {};
   for (const pos of CORE_POSITIONS) {
     const atPos = players.filter((p) => p.position === pos).sort((a, b) => b.value - a.value);
     const startable = format.maxStartable?.[pos] ?? 0;
     const replacement = ctx.replacement?.[pos] ?? 0;
-    const depth = atPos.slice(startable);
+    const depth = atPos.filter((p) => !startingIds.has(String(p.id)));
 
     byPosition[pos] = {
       position: pos,
       count: atPos.length,
+      startingCount: atPos.length - depth.length,
       totalValue: sum(atPos, (p) => p.value),
       starterValue: starterByPos[pos] ?? 0,
-      // Surplus counts only value the lineup cannot use, above replacement level.
+      // Only value the lineup cannot use, and only the part above replacement
+      // level — that is what another roster would actually pay for.
       surplusValue: sum(depth, (p) => Math.max(0, p.value - replacement)),
       surplusPlayers: depth.filter((p) => p.value > replacement).map((p) => p.id),
       maxStartable: startable,
