@@ -1,0 +1,17 @@
+{
+  "name": "dynasty-helper",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": ["server", "client"],
+  "scripts": {
+    "dev": "npm run dev --workspace=server & npm run dev --workspace=client",
+    "start": "npm run start --workspace=server",
+    "build": "npm run build --workspace=client",
+    "test": "npm run test --workspace=server",
+    "migrate": "npm run migrate --workspace=server",
+    "verify:sources": "npm run verify:sources --workspace=server",
+    "sync": "npm run sync --workspace=server"
+  },
+  "engines": { "node": ">=22.5.0" }
+}
