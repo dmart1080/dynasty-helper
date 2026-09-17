@@ -4,6 +4,7 @@ import { useStored } from './lib/useApi.js';
 import Dashboard from './pages/Dashboard.jsx';
 import Team from './pages/Team.jsx';
 import Picks from './pages/Picks.jsx';
+import Trade from './pages/Trade.jsx';
 import Settings from './pages/Settings.jsx';
 
 const AppCtx = createContext(null);
@@ -11,6 +12,7 @@ export const useApp = () => useContext(AppCtx);
 
 const TABS = [
   { to: '/', label: 'Teams', icon: '📊', end: true },
+  { to: '/trade', label: 'Trade', icon: '⇄' },
   { to: '/picks', label: 'Picks', icon: '🎯' },
   { to: '/settings', label: 'Settings', icon: '⚙️' },
 ];
@@ -32,6 +34,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/team/:rosterId" element={<Team />} />
+          <Route path="/trade" element={<Trade />} />
           <Route path="/picks" element={<Picks />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<div className="empty-state">Page not found. <NavLink to="/">Go to Teams</NavLink></div>} />

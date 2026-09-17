@@ -8,6 +8,7 @@ import { migrate } from './db/migrate.js';
 import { all } from './db/index.js';
 import leagues from './routes/leagues.js';
 import players from './routes/players.js';
+import trades from './routes/trades.js';
 import { ok, fail } from './util/respond.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -34,6 +35,7 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/leagues', leagues);
 app.use('/api/players', players);
+app.use('/api/trades', trades);
 
 // Serve the built client when it exists, so `npm start` runs the whole app.
 const clientDist = path.resolve(__dirname, '..', '..', 'client', 'dist');
