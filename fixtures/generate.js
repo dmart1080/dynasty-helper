@@ -178,16 +178,31 @@ export function generateFixtures({ seed = 20260917, leagueId = '1312193587416436
   }
 
   const rosterPlayers = Array.from({ length: numTeams }, () => []);
-  // Snake through each position so every team gets a comparable spine, then
-  // bias assignment by archetype using an age preference.
-  const TAKE = { QB: 3, RB: 5, WR: 7, TE: 3 };
-  for (const [pos, take] of Object.entries(TAKE)) {
+
+  // Real dynasty rosters are lumpy: managers hoard one position and run thin at
+  // another. A uniform snake draft would produce twelve interchangeable teams
+  // and leave the needs/surplus and trade-finder logic with nothing to find, so
+  // each team gets a positional bias on top of the base allocation.
+  const BASE_TAKE = { QB: 3, RB: 5, WR: 7, TE: 3 };
+  const POSITIONS = ['QB', 'RB', 'WR', 'TE'];
+  const targets = Array.from({ length: numTeams }, (_, team) => {
+    const t = { ...BASE_TAKE };
+    const heavy = POSITIONS[(team * 3 + 1) % POSITIONS.length];
+    const light = POSITIONS[(team * 5 + 2) % POSITIONS.length];
+    t[heavy] += 2;
+    if (light !== heavy) t[light] = Math.max(1, t[light] - 2);
+    return t;
+  });
+
+  const maxRounds = Math.max(...targets.flatMap((t) => Object.values(t)));
+  for (const pos of POSITIONS) {
     const pool = [...byPos[pos]];
-    for (let round = 0; round < take; round++) {
+    for (let round = 0; round < maxRounds; round++) {
       const order = Array.from({ length: numTeams }, (_, i) => i);
       if (round % 2 === 1) order.reverse();
       for (const team of order) {
         if (!pool.length) break;
+        if (round >= targets[team][pos]) continue;   // this team is done at this position
         // Contenders reach for the oldest available near the top; rebuilders for youngest.
         const window = pool.slice(0, Math.min(4, pool.length));
         const arch = archetype[team];
