@@ -5,12 +5,12 @@
   "type": "module",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "node --watch src/index.js",
-    "test": "node --test --test-reporter=spec \"test/**/*.test.js\"",
-    "migrate": "node src/db/migrate.js",
-    "verify:sources": "node src/sources/verify.js",
-    "sync": "node src/ingest/cli.js"
+    "start": "node --disable-warning=ExperimentalWarning src/index.js",
+    "dev": "node --disable-warning=ExperimentalWarning --watch src/index.js",
+    "test": "node --disable-warning=ExperimentalWarning --test --test-reporter=spec \"test/**/*.test.js\"",
+    "migrate": "node --disable-warning=ExperimentalWarning src/db/migrate.js",
+    "verify:sources": "node --disable-warning=ExperimentalWarning src/sources/verify.js",
+    "sync": "node --disable-warning=ExperimentalWarning src/ingest/cli.js"
   },
   "dependencies": {
     "express": "^5.1.0",
