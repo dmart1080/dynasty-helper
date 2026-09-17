@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { all, get, run } from '../db/index.js';
 import { getFormat, buildLeague } from '../services/league.js';
 import { getCurrentValues, getValueHistory } from '../services/values.js';
+import { isValidOverridePct, MAX_OVERRIDE_PCT } from '../valuation/overrides.js';
 import { ok, fail, handler } from '../util/respond.js';
 
 export const router = Router();
@@ -91,7 +92,7 @@ router.get('/overrides/list', handler((req, res) => {
 router.put('/overrides/:playerId', handler((req, res) => {
   const pct = Number(req.body?.pct);
   if (!Number.isFinite(pct)) return fail(res, 400, 'pct must be a number, e.g. 10 for +10% or -15 for -15%.');
-  if (Math.abs(pct) > 90) return fail(res, 400, 'pct must be between -90 and 90.');
+  if (!isValidOverridePct(pct)) return fail(res, 400, `pct must be between -${MAX_OVERRIDE_PCT} and ${MAX_OVERRIDE_PCT}.`);
 
   const meta = get('SELECT full_name FROM players WHERE player_id = ?', req.params.playerId);
   run(

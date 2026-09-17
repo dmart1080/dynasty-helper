@@ -10,6 +10,7 @@ import leagues from './routes/leagues.js';
 import players from './routes/players.js';
 import trades from './routes/trades.js';
 import finder from './routes/finder.js';
+import intel from './routes/intel.js';
 import { ok, fail } from './util/respond.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -38,6 +39,7 @@ app.use('/api/leagues', leagues);
 app.use('/api/players', players);
 app.use('/api/trades', trades);
 app.use('/api/finder', finder);
+app.use('/api/intel', intel);
 
 // Serve the built client when it exists, so `npm start` runs the whole app.
 const clientDist = path.resolve(__dirname, '..', '..', 'client', 'dist');

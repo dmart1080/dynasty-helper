@@ -2,6 +2,7 @@
  * Current player values: latest snapshot for a format, with manual overrides applied.
  */
 import { all, get } from '../db/index.js';
+import { applyOverride } from '../valuation/overrides.js';
 
 /** The most recent capture date we hold for a format. */
 export function latestCaptureDate(formatKey) {
@@ -36,7 +37,7 @@ export function getCurrentValues(formatKey, { capturedOn } = {}) {
   for (const r of rows) {
     const ov = overrides.get(r.player_key);
     const pct = ov ? Number(ov.pct) : 0;
-    const value = pct ? Math.max(0, Math.round(r.value * (1 + pct / 100))) : r.value;
+    const value = applyOverride(r.value, pct);
     const entry = {
       playerKey: r.player_key,
       sleeperId: r.sleeper_id,
