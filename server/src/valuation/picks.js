@@ -152,6 +152,53 @@ export function projectDraftSlots(teams) {
 }
 
 /**
+ * Which draft seasons still hold tradeable picks.
+ *
+ * Once a rookie draft completes, its picks are spent — they are players now, not
+ * assets — so continuing to value them inflates every team's total. Sleeper's
+ * draft objects carry a `status` ("pre_draft" | "drafting" | "complete"), which
+ * is the authoritative signal; the calendar is not, because leagues draft at
+ * wildly different times.
+ *
+ * A draft that is mid-flight ("drafting") still counts: most of its picks are
+ * live. Only "complete" rolls the window forward.
+ *
+ * When no draft row is known for the current season the season is kept, because
+ * hiding picks a team really owns is worse than the alternative, and a missing
+ * draft usually just means it has not been created yet.
+ *
+ * @param {object} args
+ *   currentSeason  e.g. '2026'
+ *   drafts         [{ season, status }] from the drafts table
+ *   count          how many seasons to return (default 3: current + 2)
+ * @returns {{seasons: string[], skipped: string[]}}
+ */
+export function upcomingPickSeasons({ currentSeason, drafts = [], count = 3 }) {
+  const start = Number(currentSeason);
+  if (!Number.isFinite(start)) return { seasons: [], skipped: [] };
+
+  const completed = new Set(
+    drafts
+      .filter((d) => String(d?.status ?? '').toLowerCase() === 'complete')
+      .map((d) => String(d.season)),
+  );
+
+  // Roll forward past any season whose draft has already been held.
+  let first = start;
+  const skipped = [];
+  while (completed.has(String(first))) {
+    skipped.push(String(first));
+    first++;
+    // Guard against a pathological run of completed future drafts.
+    if (first > start + 10) break;
+  }
+
+  const seasons = [];
+  for (let i = 0; i < count; i++) seasons.push(String(first + i));
+  return { seasons, skipped };
+}
+
+/**
  * Expand every team's owned picks for the given seasons.
  *
  * Sleeper's traded_picks only lists picks that have moved. Every other pick is

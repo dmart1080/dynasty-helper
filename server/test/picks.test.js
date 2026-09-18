@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   slotMultiplier, genericRoundValue, valuePick, projectDraftSlots,
-  expandOwnedPicks, PICK_DEFAULTS,
+  expandOwnedPicks, upcomingPickSeasons, PICK_DEFAULTS,
 } from '../src/valuation/picks.js';
 
 const NUM_TEAMS = 12;
@@ -153,4 +153,76 @@ test('every pick has exactly one owner', () => {
   assert.equal(picks.length, 4 * 3 * 4);
   const keys = picks.map((p) => `${p.season}|${p.round}|${p.originalRosterId}`);
   assert.equal(new Set(keys).size, keys.length, 'no duplicate picks');
+});
+
+// ---- Draft season window ----------------------------------------------------
+
+test('a completed draft rolls the pick window forward', () => {
+  const { seasons, skipped } = upcomingPickSeasons({
+    currentSeason: '2026',
+    drafts: [{ season: '2026', status: 'complete' }],
+  });
+  assert.deepEqual(seasons, ['2027', '2028', '2029'], '2026 picks are spent and must not be valued');
+  assert.deepEqual(skipped, ['2026']);
+});
+
+test('an unheld draft keeps the current season in the window', () => {
+  const { seasons, skipped } = upcomingPickSeasons({
+    currentSeason: '2026',
+    drafts: [{ season: '2026', status: 'pre_draft' }],
+  });
+  assert.deepEqual(seasons, ['2026', '2027', '2028']);
+  assert.deepEqual(skipped, []);
+});
+
+test('a draft in progress still counts, since most of its picks are live', () => {
+  const { seasons } = upcomingPickSeasons({
+    currentSeason: '2026',
+    drafts: [{ season: '2026', status: 'drafting' }],
+  });
+  assert.deepEqual(seasons, ['2026', '2027', '2028']);
+});
+
+test('several consecutive completed drafts all roll forward', () => {
+  const { seasons, skipped } = upcomingPickSeasons({
+    currentSeason: '2025',
+    drafts: [
+      { season: '2025', status: 'complete' },
+      { season: '2026', status: 'complete' },
+    ],
+  });
+  assert.deepEqual(seasons, ['2027', '2028', '2029']);
+  assert.deepEqual(skipped, ['2025', '2026']);
+});
+
+test('an unknown draft keeps the season rather than hiding real assets', () => {
+  const { seasons } = upcomingPickSeasons({ currentSeason: '2026', drafts: [] });
+  assert.deepEqual(seasons, ['2026', '2027', '2028']);
+});
+
+test('a completed draft in a prior season does not affect the window', () => {
+  const { seasons, skipped } = upcomingPickSeasons({
+    currentSeason: '2026',
+    drafts: [{ season: '2024', status: 'complete' }, { season: '2026', status: 'pre_draft' }],
+  });
+  assert.deepEqual(seasons, ['2026', '2027', '2028']);
+  assert.deepEqual(skipped, []);
+});
+
+test('draft status matching is case-insensitive', () => {
+  const { seasons } = upcomingPickSeasons({
+    currentSeason: '2026', drafts: [{ season: '2026', status: 'COMPLETE' }],
+  });
+  assert.deepEqual(seasons, ['2027', '2028', '2029']);
+});
+
+test('a numeric season is handled as readily as a string', () => {
+  const { seasons } = upcomingPickSeasons({
+    currentSeason: 2026, drafts: [{ season: 2026, status: 'complete' }],
+  });
+  assert.deepEqual(seasons, ['2027', '2028', '2029']);
+});
+
+test('an unusable season yields no window instead of NaN seasons', () => {
+  assert.deepEqual(upcomingPickSeasons({ currentSeason: 'unknown', drafts: [] }).seasons, []);
 });

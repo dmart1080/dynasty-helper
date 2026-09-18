@@ -94,6 +94,7 @@ router.get('/:leagueId/picks', handler((req, res) => {
 
   ok(res, {
     pickMode, seasons: league.pickSeasons, rounds: league.rounds,
+    draftedSeasons: league.draftedSeasons,
     projectedSlots: league.projectedSlots,
     owners: [...byOwner.values()]
       .map((o) => ({ ...o, totalValue: Math.round(o.totalValue), picks: o.picks.sort((a, b) => a.season.localeCompare(b.season) || a.round - b.round) }))

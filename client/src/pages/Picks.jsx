@@ -29,6 +29,17 @@ export default function Picks() {
       </div>
       <MetaBanner meta={meta} />
 
+      {data.draftedSeasons?.length > 0 && (
+        <div className="banner info" style={{ marginTop: 12 }}>
+          <div>
+            The {data.draftedSeasons.join(' and ')} rookie draft
+            {data.draftedSeasons.length > 1 ? 's have' : ' has'} already been held, so
+            {data.draftedSeasons.length > 1 ? ' those picks are' : ' those picks are'} spent
+            and no longer counted as assets.
+          </div>
+        </div>
+      )}
+
       <div className="banner info" style={{ marginTop: 12 }}>
         <div>
           {pickMode === 'projected'

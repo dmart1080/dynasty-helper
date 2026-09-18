@@ -295,6 +295,14 @@ the app builds the full grid of (season × round × original roster) and applies
 the traded rows over the top. Provenance is preserved — the *original* owner
 drives the slot projection, the *current* owner holds the asset.
 
+**Which seasons count**: the window is the next three rookie drafts, determined
+by each draft's Sleeper `status`, not by the calendar — leagues draft at wildly
+different times. A draft that is `complete` has had its picks spent, so the
+window rolls forward (in 2026, once that draft is done, you see 2027–2029). A
+draft that is `drafting` still counts, since most of its picks are live. If no
+draft row is known for a season the season is kept, because hiding picks a team
+really owns is worse than the alternative.
+
 ### Trade calculator
 
 Raw value is the plain sum of what each side receives. Two named adjustments sit

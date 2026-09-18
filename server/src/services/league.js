@@ -10,7 +10,7 @@
 import { all, get, kvGet, unj } from '../db/index.js';
 import { deriveFormat, describeFormat, CORE_POSITIONS } from '../valuation/format.js';
 import { evaluateLeague, evaluateTeam, replacementLevels } from '../valuation/team.js';
-import { expandOwnedPicks, valuePick, projectDraftSlots } from '../valuation/picks.js';
+import { expandOwnedPicks, valuePick, projectDraftSlots, upcomingPickSeasons } from '../valuation/picks.js';
 import { optimalLineup } from '../valuation/lineup.js';
 import { getCurrentValues, getPickValuesByRound, latestCaptureDate } from './values.js';
 
@@ -165,13 +165,14 @@ export function buildLeague(leagueId, { pickMode = 'projected' } = {}) {
 
   // ---- Value every owned pick ----
   const currentSeason = String(leagueRow.season ?? new Date().getFullYear());
-  const draftRow = get('SELECT rounds FROM drafts WHERE league_id = ? ORDER BY season DESC LIMIT 1', leagueId);
-  const rounds = Number(draftRow?.rounds) || Number(leagueRow.league_settings?.draft_rounds) || 4;
+  const draftRows = all('SELECT season, rounds, status FROM drafts WHERE league_id = ? ORDER BY season DESC', leagueId);
+  const rounds = Number(draftRows[0]?.rounds) || Number(leagueRow.league_settings?.draft_rounds) || 4;
 
-  // Current season's rookie draft plus the next two years, per the brief.
-  const seasons = [];
-  const startYear = Number(currentSeason);
-  for (let i = 0; i <= 2; i++) seasons.push(String(startYear + i));
+  // The next three rookie drafts. A completed draft's picks are spent, so the
+  // window rolls forward rather than valuing assets that no longer exist.
+  const { seasons, skipped: draftedSeasons } = upcomingPickSeasons({
+    currentSeason, drafts: draftRows, count: 3,
+  });
 
   const tradedPickRows = all('SELECT * FROM traded_picks WHERE league_id = ?', leagueId);
   const owned = expandOwnedPicks({
@@ -218,6 +219,7 @@ export function buildLeague(leagueId, { pickMode = 'projected' } = {}) {
     pickMode,
     rounds,
     pickSeasons: seasons,
+    draftedSeasons,
     projectedSlots: Object.fromEntries(projectedSlots),
     replacement,
     medians: league.medians,
