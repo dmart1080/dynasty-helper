@@ -63,8 +63,22 @@ LAN IP) or your desktop.
 For a single-process deployment:
 
 ```bash
-npm run build && npm start      # Express serves the built client on :5175
+npm run build
+npm start                       # Express serves the built client on :5175
 ```
+
+### On Windows
+
+Everything works in PowerShell, with two things to know:
+
+- **Do not run from `C:\Windows\system32`** — that is where PowerShell opens when
+  launched as Administrator, and it is not writable. `cd $HOME` first.
+- **Windows PowerShell 5.1 does not support `&&`.** Run chained commands on
+  separate lines, or use PowerShell 7+ / `cmd`. Every command in this README is
+  written one per line for that reason.
+
+`npm run dev` starts both processes through `scripts/dev.js` rather than a shell
+`&`, so it behaves identically on Windows, macOS and Linux.
 
 ### No network? Try it offline first
 
